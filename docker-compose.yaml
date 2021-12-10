@@ -1,0 +1,57 @@
+version: "3.8"
+
+services:
+  ubuntu-c:
+    hostname: ubuntu-c
+    container_name: ubuntu-c
+    image: vwnio/hosts:ansible
+    ports:
+      - ${UBUNTUC_PORT_SSHD:-2201}:22
+      - ${UBUNTUC_PORT_TTYD:-7681}:7681
+    privileged: true
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      - ${CONFIG}:/config
+      - ${ANSIBLE_HOME}/shared:/shared
+      - ${ANSIBLE_HOME}/ubuntu-c/ansible:/home/ansible
+      - ${ANSIBLE_HOME}/ubuntu-c/root:/root
+    networks:
+      - home.vwn.io
+
+  ubuntu1:
+    hostname: ubuntu1
+    container_name: ubuntu1
+    image: vwnio/hosts:ubuntu
+    ports:
+      - ${UBUNTU1_PORT_SSHD:-2202}:22
+      - ${UBUNTU1_PORT_TTYD:-7682}:7681
+    privileged: true
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      - ${CONFIG}:/config
+      - ${ANSIBLE_HOME}/shared:/shared
+      - ${ANSIBLE_HOME}/ubuntu1/ansible:/home/ansible
+      - ${ANSIBLE_HOME}/ubuntu1/root:/root
+    networks:
+      - home.vwn.io
+
+  centos1:
+    hostname: centos1
+    container_name: centos1
+    image: vwnio/hosts:centos
+    ports:
+      - ${CENTOS1_PORT_SSHD:-2203}:22
+      - ${CENTOS1_PORT_TTYD:-7683}:7681
+    privileged: true
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      - ${CONFIG}:/config
+      - ${ANSIBLE_HOME}/shared:/shared
+      - ${ANSIBLE_HOME}/centos1/ansible:/home/ansible
+      - ${ANSIBLE_HOME}/centos1/root:/root
+    networks:
+      - home.vwn.io
+
+networks:
+  home.vwn.io:
+    name: home.vwn.io

@@ -1,0 +1,30 @@
+---
+- name: Initial setup
+  hosts: pikvm
+  remote_user: root
+  gather_facts: no
+
+  vars:
+    ssh_keyfile: "{{ lookup('env', 'SSH_KEYFILE') | default('~/.ssh/id_rsa', True) }}"
+    user_username: "{{ lookup('env', 'USERNAME') | default('ansible', True) }}"
+    user_password: "{{ lookup('env', 'PASSWORD') | default('ansible', True) }}"
+
+  tasks:
+
+    - name: Check host key known hosts
+      delegate_to: localhost
+      shell: /bin/bash -c 'ssh-keygen -F {{ item.host}}'
+      register: hosts
+      changed_when: hosts.rc != 0
+      failed_when: false
+      loop:
+        - { host: 'pikvm.lan.besqua.red'}
+        - { host: '10.72.99.21'}
+
+    - name: Create GPT partition table
+      delegate_to: localhost
+      shell: "echo {{ item.item.host }} >> ~/pikvm/test "
+      with_items: "{{ hosts.results }}"
+      when:
+        - item.rc != 0
+      

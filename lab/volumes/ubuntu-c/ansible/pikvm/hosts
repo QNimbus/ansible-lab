@@ -1,0 +1,10 @@
+[control]
+localhost ansible_connection=local
+
+[pikvm]
+pikvm.lan.besqua.red ssh_user=ansible
+
+[pikvm:vars]
+ansible_remote_tmp = /tmp
+ansible_async_dir = /tmp/.ansible_async
+ansible_python_interpreter = auto_silent

@@ -1,0 +1,55 @@
+---
+- name: Revert initial setup
+  hosts: pikvm
+  become: true
+  gather_facts: no
+
+  vars:
+    ssh_keyfile: "{{ lookup('env', 'SSH_KEYFILE') | default('~/.ssh/id_rsa', True) }}"
+    user_username: "{{ lookup('env', 'USERNAME') | default('ansible', True) }}"
+    user_password: "{{ lookup('env', 'PASSWORD') | default('ansible', True) }}"
+
+  tasks:
+
+    - name: Mount filesystem read/write
+      raw: rw
+      changed_when: False
+      register: result
+      failed_when:
+      - result.rc != 0
+
+    - name: Configure SSH
+      block:
+
+      - name: Revert -- Password based logins are disabled - only public key based logins are allowed.
+        lineinfile:
+          dest: /etc/ssh/sshd_config
+          regexp: "{{ item.regexp }}"
+          line: "{{ item.line }}"
+        loop:
+        - { regexp: '^#?\s*AuthenticationMethods', line: 'AuthenticationMethods publickey password' }
+        - { regexp: '^#?\s*PasswordAuthentication', line: 'PasswordAuthentication yes' }
+
+      - name: Allow root login via SSH
+        # See: https://docs.ansible.com/ansible/latest/collections/ansible/builtin/lineinfile_module.html
+        ansible.builtin.lineinfile:
+          path: /etc/ssh/sshd_config
+          regexp: "{{ item.regexp }}"
+          line: "{{ item.line }}"
+          state: present
+          validate: /usr/sbin/sshd -t -f %s
+        loop:
+          - { regexp: '^PermitRootLogin', line: 'PermitRootLogin yes' }
+
+      - name: Restart SSHD
+        # See: https://docs.ansible.com/ansible/latest/collections/ansible/builtin/service_module.html
+        ansible.builtin.service:
+          name: sshd
+          state: restarted
+
+    - name: Mount filesystem read-only
+      raw: ro
+      changed_when: False
+      register: result
+      failed_when:
+      - result.rc != 0
